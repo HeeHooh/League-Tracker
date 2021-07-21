@@ -1,13 +1,19 @@
 package com.example.demo.riotapi;
 
+import org.springframework.stereotype.Controller;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.autoconfigure.couchbase.CouchbaseProperties.Env;
-import org.springframework.context.expression.EnvironmentAccessor;
 import org.springframework.core.env.Environment;
 import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.ModelAttribute;
+import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.servlet.ModelAndView;
+import org.springframework.ui.Model;
+
+
+import jdk.jfr.ValueDescriptor;
+
 
 import com.merakianalytics.orianna.Orianna;
 import com.merakianalytics.orianna.datapipeline.riotapi.RiotAPI;
@@ -20,22 +26,27 @@ import com.merakianalytics.orianna.types.core.summoner.Summoner;
 import com.merakianalytics.orianna.types.core.summoner.Summoners;
 import com.merakianalytics.orianna.types.dto.league.LeagueEntries;
 
-@RestController
-@RequestMapping(path = "summoner")
+@Controller
 public class SummonerInfoController {
+	
 	@Autowired
 	private Environment env;
 
+	private ValidateSummoner validateSummoner;
 
-    @GetMapping
-	public Summoner getSummonerInfo(){
-		String api_key = env.getProperty("riot.apikey");
-		Orianna.setRiotAPIKey(api_key);
+	@GetMapping("/summoner")
+	public String findSummoner(Model model){
+		Orianna.setRiotAPIKey(env.getProperty("riot.apikey"));
 		Orianna.setDefaultRegion(Region.NORTH_AMERICA);
+		model.addAttribute("summoner", new SummonerInfo());
+		return "summoner";
+	}
 
-		Summoner summoner = Orianna.summonerNamed("watar").get();
-		System.out.println(summoner.getName() + " is level " + summoner.getLevel() + " on the " + summoner.getRegion() + " server.");
+	@PostMapping("/summoner")
+	public String searchSummoner(Model model, @ModelAttribute SummonerInfo summonerInfo){
 
-		return summoner;
+		model.addAttribute("summoner", summonerInfo);
+		
+		return "results";
 	}
 }
